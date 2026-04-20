@@ -1,0 +1,22 @@
+name: Uwuzu Bot Runner
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # 5分ごとに自動起動
+  workflow_dispatch: # 手動ボタンを有効化
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Pythonセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: ライブラリ作成
+        run: pip install requests
+      - name: BOT実行
+        env:
+          UWUZU_TOKEN: ${{ secrets.UWUZU_TOKEN }}
+        run: python main.py

@@ -1,0 +1,37 @@
+name: Uwuzu Bot Runner
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # 5分ごとに自動起動
+  workflow_dispatch: # 手動実行ボタンを有効化
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 記憶ファイル（last_stats.txt）を保存するために必要
+    steps:
+      - name: コードをチェックアウト
+        uses: actions/checkout@v3
+
+      - name: Pythonセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: ライブラリ（requests）をインストール
+        run: pip install requests
+
+      - name: BOTを実行
+        env:
+          UWUZU_TOKEN: ${{ secrets.UWUZU_TOKEN }} # 隠し金庫のトークンを使用
+        run: python main.py
+
+      - name: 人数を記憶して保存
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
+          git add last_stats.txt
+          # 変更がある場合のみ保存（変更がない場合はエラーにせず終了）
+          git commit -m "Update user count memory" || exit 0
+          git push

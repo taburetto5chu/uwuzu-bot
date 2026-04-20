@@ -6,7 +6,7 @@ import os
 DOMAIN = "uwuzu.ut-gov.f5.si"
 TOKEN = os.environ.get("UWUZU_TOKEN")
 STATUS_FILE = "last_stats.txt" 
-KIRIBAN_STEP = 1 # 投稿数は100件ごとに祝う
+KIRIBAN_STEP = 100 # 投稿数は100件ごとに祝う
 
 def get_server_stats():
     url = f"https://{DOMAIN}/api/serverinfo-api"
@@ -44,7 +44,7 @@ def main():
 
     # --- ② 投稿数のお祝い（100件ごと） ---
     if current_posts % KIRIBAN_STEP == 0 and current_posts != 0:
-        msg = f"🎉 祝・総投稿数 {current_posts} 件突破！！\nみんなたくさん投稿してくれてありがとう！"
+        msg = f"【自動投稿】🎉 祝・総投稿数 {current_posts} 件突破！！\nみんなたくさん投稿してくれてありがとう！"
         post_message(msg)
         print(f"キリ番お祝い: {current_posts}件")
 

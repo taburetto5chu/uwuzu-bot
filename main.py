@@ -5,7 +5,7 @@ import os
 # --- 設定 ---
 DOMAIN = "uwuzu.ut-gov.f5.si"
 TOKEN = os.environ.get("UWUZU_TOKEN") # 隠し金庫から読み込む
-KIRIBAN_STEP = 100 
+KIRIBAN_STEP = 1 
 
 def get_server_stats():
     url = f"https://{DOMAIN}/api/serverinfo-api"

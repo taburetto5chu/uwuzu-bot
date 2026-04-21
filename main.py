@@ -10,32 +10,40 @@ app = Flask(__name__)
 # 設定
 DOMAIN = "uwuzu.ut-gov.f5.si"
 TOKEN = os.environ.get("UWUZU_TOKEN")
-STATUS_FILE = "/tmp/last_stats.txt" # Renderで書き込み可能な一時フォルダに変更
-KIRIBAN_STEP = 100
+STATUS_FILE = "/tmp/last_stats.txt"
+KIRIBAN_STEP = 1  # テストのため1に設定
 
 def get_server_stats():
     url = f"https://{DOMAIN}/api/serverinfo-api"
+    print(f"DEBUG: Fetching stats from {url}...")
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
         data = response.json()
         usage = data["server_info"]["usage"]
-        return {"users": int(usage.get("users", 0)), "posts": int(usage.get("ueuse", 0))}
+        stats = {"users": int(usage.get("users", 0)), "posts": int(usage.get("ueuse", 0))}
+        print(f"DEBUG: Stats received: {stats}")
+        return stats
     except Exception as e:
-        print(f"Error fetching stats: {e}")
+        print(f"DEBUG: Error fetching stats: {e}")
         return None
 
 def post_message(text):
     encoded_text = urllib.parse.quote(text)
     url = f"https://{DOMAIN}/api/ueuse/create?token={TOKEN}&text={encoded_text}"
+    print(f"DEBUG: Posting message to uwuzu...")
     try:
-        requests.post(url, timeout=10)
+        res = requests.post(url, timeout=15)
+        print(f"DEBUG: Post response status: {res.status_code}")
     except Exception as e:
-        print(f"Error posting message: {e}")
+        print(f"DEBUG: Error posting message: {e}")
 
 def bot_worker():
     print("--- Bot Worker Started ---")
     while True:
+        print("DEBUG: Loop cycle start.")
         stats = get_server_stats()
+        
         if stats and TOKEN:
             current_users = stats["users"]
             current_posts = stats["posts"]
@@ -47,6 +55,8 @@ def bot_worker():
                     if len(lines) >= 2:
                         last_users = int(lines[0].strip())
                         last_posts = int(lines[1].strip())
+            
+            print(f"DEBUG: Comparing - Users: {last_users}->{current_users}, Posts: {last_posts}->{current_posts}")
 
             if last_users != 0:
                 if current_users > last_users:
@@ -57,18 +67,17 @@ def bot_worker():
 
             with open(STATUS_FILE, "w") as f:
                 f.write(f"{current_users}\n{current_posts}")
+        else:
+            print("DEBUG: Stats or TOKEN missing. Skipping this cycle.")
         
-        print("Check complete. Waiting 5 minutes...")
+        print("DEBUG: Check complete. Waiting 5 minutes...")
         time.sleep(300)
 
-# Render用のWebサイト
 @app.route('/')
 def hello():
-    return "Bot is running!"
+    return "Bot is running with Debug mode!"
 
-# プログラム起動時にボットを別スレッドで動かす
 threading.Thread(target=bot_worker, daemon=True).start()
 
 if __name__ == "__main__":
-    # ローカル実行用
     app.run(host='0.0.0.0', port=10000)

@@ -36,6 +36,7 @@ def post_message(text):
 # --- ボットのメインループ（5分おきにチェック） ---
 def bot_loop():
     print("Bot loop started!")
+    post_message("【常駐テスト】ボットが新しいお家に引っ越しました！これからは5分おきにちゃんと見守るよ！")
     while True:
         stats = get_server_stats()
         if stats and TOKEN:

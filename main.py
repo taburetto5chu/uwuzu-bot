@@ -29,12 +29,17 @@ def main():
 
     current_users = stats["users"]
     current_posts = stats["posts"]
+    
+    # 記憶ファイルから前回の「人数」と「投稿数」を読み込む
     last_users = 0
-
-    # 記憶ファイルがあれば読み込む
+    last_posts = 0
     if os.path.exists(STATUS_FILE):
         with open(STATUS_FILE, "r") as f:
-            last_users = int(f.read().strip())
+            lines = f.readlines()
+            if len(lines) >= 1:
+                last_users = int(lines[0].strip())
+            if len(lines) >= 2:
+                last_posts = int(lines[1].strip())
 
     # --- ① 新規ユーザーのお祝い（1人増えるごと） ---
     if current_users > last_users and last_users != 0:
@@ -42,15 +47,18 @@ def main():
         post_message(msg)
         print(f"新規ユーザーお祝い: {current_users}人")
 
-    # --- ② 投稿数のお祝い（100件ごと） ---
-    if current_posts % KIRIBAN_STEP == 0 and current_posts != 0:
-        msg = f"【自動投稿】🎉 祝・総投稿数 {current_posts} 件突破！！\nみんなたくさん投稿してくれてありがとう！"
+    # --- ② 投稿数のお祝い（100件のラインを越えたら祝う） ---
+    # 割り算の「商」を比較することで、100の位が変わった瞬間に気づけます
+    if (current_posts // KIRIBAN_STEP) > (last_posts // KIRIBAN_STEP) and last_posts != 0:
+        # 何件突破したか（100, 200...）を計算
+        achieved_kiriban = (current_posts // KIRIBAN_STEP) * KIRIBAN_STEP
+        msg = f"【自動投稿】🎉 祝・総投稿数 {achieved_kiriban} 件突破！！\nみんなたくさん投稿してくれてありがとう！"
         post_message(msg)
-        print(f"キリ番お祝い: {current_posts}件")
+        print(f"キリ番お祝い: {achieved_kiriban}件")
 
-    # 今の人数を保存（次回の比較用）
+    # 今の数値を保存（1行目に人数、2行目に投稿数）
     with open(STATUS_FILE, "w") as f:
-        f.write(str(current_users))
+        f.write(f"{current_users}\n{current_posts}")
 
 if __name__ == "__main__":
     main()
